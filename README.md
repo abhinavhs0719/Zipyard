@@ -1,5 +1,7 @@
 # 📦 Zipyard
 
+![Zipyard](Zipyard.png)
+
 **A local packing yard for your files — no uploads, no server, no account.**
 
 Zipyard is a lightweight, browser-based tool that packs files and folders into a `.zip` archive entirely on your own device. There's no backend, no database, and no data transfer of any kind — your files never leave the tab they're dropped into.
