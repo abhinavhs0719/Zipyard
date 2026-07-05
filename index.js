@@ -17,6 +17,8 @@
   const manifestList = document.getElementById("manifestList");
   const fileCountEl  = document.getElementById("fileCount");
   const totalSizeEl  = document.getElementById("totalSize");
+  const sizeWarning  = document.getElementById("sizeWarning");
+  const sizeLimit    = document.getElementById("sizeLimit");
   const zipNameInput = document.getElementById("zipName");
   const clearAllBtn  = document.getElementById("clearAll");
   const packBtn      = document.getElementById("packBtn");
@@ -32,6 +34,14 @@
      Daily local counters (no server — this device only)
   --------------------------------------------- */
   const STORAGE_KEY = "zipyard_stats_v1";
+
+  // Purely a UI heads-up — nothing is blocked past this point, the browser
+  // just tends to feel sluggish once a batch gets this large.
+  const LARGE_BATCH_WARNING_BYTES = 750 * 1024 * 1024; // 750 MB
+
+  // Hard ceiling — past this, new files are rejected outright to keep the
+  // browser tab from running out of memory mid-pack.
+  const MAX_BATCH_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
   function todayKey(){
     const d = new Date();
@@ -105,16 +115,32 @@
     return `${pathFor(file)}::${file.size}::${file.lastModified}`;
   }
 
+  function currentQueueSize(){
+    return queue.reduce((sum, item) => sum + item.size, 0);
+  }
+
   function addFiles(fileList){
     let added = 0;
+    let rejected = 0;
+    let runningSize = currentQueueSize();
+
     for(const file of fileList){
       const k = keyFor(file);
       if(seenKeys.has(k)) continue;
+
+      if(runningSize + file.size > MAX_BATCH_BYTES){
+        rejected++;
+        continue;
+      }
+
       seenKeys.add(k);
       queue.push({ file, path: pathFor(file), size: file.size });
+      runningSize += file.size;
       added++;
     }
+
     if(added > 0) bumpFiles(added);
+    sizeLimit.hidden = rejected === 0;
     renderManifest();
   }
 
@@ -128,6 +154,7 @@
   function clearQueue(){
     queue = [];
     seenKeys.clear();
+    sizeLimit.hidden = true;
     renderManifest();
   }
 
@@ -171,6 +198,7 @@
     manifestList.appendChild(frag);
     fileCountEl.textContent = `${queue.length} file${queue.length === 1 ? "" : "s"}`;
     totalSizeEl.textContent = formatBytes(totalSize);
+    sizeWarning.hidden = totalSize < LARGE_BATCH_WARNING_BYTES;
     packBtn.disabled = false;
   }
 
