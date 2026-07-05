@@ -25,9 +25,6 @@
   const progressFill = document.getElementById("progressFill");
   const progressPct  = document.getElementById("progressPct");
 
-  const stampToast  = document.getElementById("stampToast");
-  const stampDetail = document.getElementById("stampDetail");
-
   const statFilesEl = document.getElementById("statFiles");
   const statZipsEl  = document.getElementById("statZips");
 
@@ -225,6 +222,28 @@
     }
   }
 
+  // Walks a FileSystemDirectoryHandle (from showDirectoryPicker) and collects
+  // every nested File, tagging each with a webkitRelativePath-style path.
+  async function walkDirectoryHandle(dirHandle, pathPrefix = ""){
+    const collected = [];
+    for await (const [name, handle] of dirHandle.entries()){
+      if(handle.kind === "file"){
+        const file = await handle.getFile();
+        Object.defineProperty(file, "webkitRelativePath", {
+          value: pathPrefix + name,
+          configurable: true
+        });
+        collected.push(file);
+      } else if(handle.kind === "directory"){
+        const nested = await walkDirectoryHandle(handle, pathPrefix + name + "/");
+        collected.push(...nested);
+      }
+    }
+    return collected;
+  }
+
+  const supportsDirectoryPicker = typeof window.showDirectoryPicker === "function";
+
   ["dragenter","dragover"].forEach(evt => {
     dropzone.addEventListener(evt, (e) => {
       e.preventDefault();
@@ -253,7 +272,26 @@
   });
 
   pickFilesBtn.addEventListener("click", (e) => { e.stopPropagation(); fileInput.click(); });
-  pickFolderBtn.addEventListener("click", (e) => { e.stopPropagation(); folderInput.click(); });
+
+  pickFolderBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    if(supportsDirectoryPicker){
+      try{
+        const dirHandle = await window.showDirectoryPicker();
+        const files = await walkDirectoryHandle(dirHandle, dirHandle.name + "/");
+        addFiles(files);
+      } catch(err){
+        // AbortError just means the person closed the dialog without picking anything
+        if(err && err.name !== "AbortError"){
+          console.error("Zipyard: folder selection failed", err);
+          folderInput.click(); // fall back to the classic picker
+        }
+      }
+    } else {
+      folderInput.click();
+    }
+  });
 
   fileInput.addEventListener("change", (e) => {
     addFiles(e.target.files);
@@ -305,7 +343,6 @@
       setTimeout(() => URL.revokeObjectURL(url), 4000);
 
       bumpZips();
-      showStamp(queue.length, blob.size, finalName);
     } catch(err){
       console.error("Zipyard: failed to build archive", err);
       alert("Something went wrong while building the archive. Please try again.");
@@ -314,15 +351,5 @@
       setTimeout(() => { progressWrap.hidden = true; }, 900);
     }
   });
-
-  function showStamp(count, size, name){
-    stampDetail.textContent = `${count} file${count === 1 ? "" : "s"} · ${formatBytes(size)} → ${name}`;
-    stampToast.hidden = false;
-    stampToast.style.animation = "none";
-    void stampToast.offsetWidth;
-    stampToast.style.animation = "";
-    clearTimeout(showStamp._t);
-    showStamp._t = setTimeout(() => { stampToast.hidden = true; }, 5000);
-  }
 
 })();
