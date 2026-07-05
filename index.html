@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zipyard — Pack files into a .zip, right in your browser</title>
+<meta name="description" content="Drop in files or a whole folder and Zipyard packs them into a .zip on your own machine. Nothing is uploaded, nothing touches a server.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="grain"></div>
+
+<header class="site-head">
+  <div class="wrap head-row">
+    <p class="head-tag">local packing yard for your files</p>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero wrap">
+    <div class="hero-copy">
+      <p class="eyebrow">no uploads · no server · no account</p>
+      <h1>Drop your files.<br>Walk out with a <span class="hl">.zip</span>.</h1>
+      <p class="lede">Zipyard builds the archive inside your own browser tab. Your files never leave your device — there is no server for them to travel to.</p>
+    </div>
+    <div class="hero-stats" aria-label="session activity">
+      <div class="odo-card">
+        <span class="odo-label">files packed today</span>
+        <div class="odo" id="statFiles">
+          <span class="odo-digit">0</span><span class="odo-digit">0</span><span class="odo-digit">0</span><span class="odo-digit">0</span>
+        </div>
+      </div>
+      <div class="odo-card">
+        <span class="odo-label">crates shipped today</span>
+        <div class="odo" id="statZips">
+          <span class="odo-digit">0</span><span class="odo-digit">0</span><span class="odo-digit">0</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="yard wrap">
+
+    <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Add files or a folder to pack">
+      <div class="dz-corner dz-corner--tl"></div>
+      <div class="dz-corner dz-corner--tr"></div>
+      <div class="dz-corner dz-corner--bl"></div>
+      <div class="dz-corner dz-corner--br"></div>
+
+      <svg class="dz-icon" viewBox="0 0 64 64" width="52" height="52" aria-hidden="true">
+        <path d="M8 22 32 10l24 12-24 12L8 22Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M8 22v20l24 12V34L8 22Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M56 22v20L32 54V34l24-12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M32 34v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+
+      <p class="dz-title">Drag files or a folder here</p>
+      <p class="dz-sub">or use the buttons below</p>
+
+      <div class="dz-actions">
+        <button type="button" class="btn btn--primary" id="pickFiles">Choose files</button>
+        <button type="button" class="btn btn--ghost" id="pickFolder">Choose a folder</button>
+      </div>
+
+      <div class="dz-mark">
+        <span class="mark-crate" aria-hidden="true">
+          <svg viewBox="0 0 28 28" width="24" height="24">
+            <path d="M2 8.5 14 3l12 5.5-12 5.5L2 8.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M2 8.5v11L14 25V14L2 8.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M26 8.5v11L14 25V14l12-5.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="mark-text">ZIPYARD</span>
+      </div>
+
+      <input type="file" id="fileInput" multiple hidden>
+      <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
+    </div>
+
+    <div class="manifest" id="manifest" hidden>
+      <div class="manifest-head">
+        <h2>Packing list</h2>
+        <div class="manifest-meta">
+          <span id="fileCount">0 files</span>
+          <span class="dot">·</span>
+          <span id="totalSize">0 KB</span>
+        </div>
+      </div>
+
+      <ul class="manifest-list" id="manifestList"></ul>
+
+      <div class="manifest-foot">
+        <div class="foot-left">
+          <label class="zipname-field">
+            <span>Archive name</span>
+            <input type="text" id="zipName" value="zipyard-archive" spellcheck="false">
+            <span class="ext">.zip</span>
+          </label>
+        </div>
+        <div class="foot-right">
+          <button type="button" class="btn btn--text" id="clearAll">Clear all</button>
+          <button type="button" class="btn btn--primary btn--pack" id="packBtn">
+            <span class="btn-label">Pack into .zip</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap" hidden>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
+    </div>
+
+    <div class="stamp-toast" id="stampToast" hidden>
+      <div class="stamp">PACKED</div>
+      <p id="stampDetail">12 files · 4.3 MB → zipyard-archive.zip</p>
+    </div>
+
+  </section>
+
+  <section class="how wrap">
+    <h2 class="how-title">How this actually works</h2>
+    <ol class="how-list">
+      <li>
+        <span class="how-num">01</span>
+        <div>
+          <h3>Your files stay on your machine</h3>
+          <p>The browser reads the bytes locally. There is no upload step, so there's nothing to wait on and nothing sitting on a server afterward.</p>
+        </div>
+      </li>
+      <li>
+        <span class="how-num">02</span>
+        <div>
+          <h3>The archive is built in memory</h3>
+          <p>A compression library running inside the page assembles the .zip, folder structure included, entirely on your device's own processor.</p>
+        </div>
+      </li>
+      <li>
+        <span class="how-num">03</span>
+        <div>
+          <h3>You get a normal download</h3>
+          <p>When it's done, your browser offers the .zip like any other download. Close the tab and everything involved is gone.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-row">
+    <p>Zipyard runs entirely client-side. The counters above reset with a new day and live only in this browser.</p>
+    <p class="foot-lib">Archiving by <a href="https://stuk.github.io/jszip/" target="_blank" rel="noopener">JSZip</a></p>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="index.js"></script>
+</body>
+</html>
