@@ -92,6 +92,16 @@
         </div>
       </div>
 
+      <div class="size-warning" id="sizeWarning" hidden>
+        <span class="warn-icon" aria-hidden="true">!</span>
+        <p>This is a large batch — your browser will hold it all in memory while packing, so it may take a while or slow down on lower-memory devices.</p>
+      </div>
+
+      <div class="size-limit" id="sizeLimit" hidden>
+        <span class="warn-icon warn-icon--stop" aria-hidden="true">×</span>
+        <p>Zipyard packs up to 2 GB per archive so your browser tab doesn't run out of memory. Some of what you just added didn't fit and was skipped — split large batches into more than one archive.</p>
+      </div>
+
       <ul class="manifest-list" id="manifestList"></ul>
 
       <div class="manifest-foot">
@@ -114,11 +124,6 @@
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         <span class="progress-pct" id="progressPct">0%</span>
       </div>
-    </div>
-
-    <div class="stamp-toast" id="stampToast" hidden>
-      <div class="stamp">PACKED</div>
-      <p id="stampDetail">12 files · 4.3 MB → zipyard-archive.zip</p>
     </div>
 
   </section>
