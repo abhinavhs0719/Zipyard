@@ -321,6 +321,7 @@ h1 .hl{
   padding: 10px 12px;
   margin: 14px 0 4px;
 }
+.size-warning[hidden]{ display: none; }
 .warn-icon{
   flex-shrink: 0;
   width: 18px;
@@ -352,6 +353,7 @@ h1 .hl{
   padding: 10px 12px;
   margin: 14px 0 4px;
 }
+.size-limit[hidden]{ display: none; }
 .size-limit p{
   margin: 0;
   font-size: 12.5px;
@@ -442,6 +444,7 @@ h1 .hl{
   align-items: center;
   gap: 12px;
 }
+.progress-wrap[hidden]{ display: none; }
 .progress-track{
   flex: 1;
   height: 8px;
