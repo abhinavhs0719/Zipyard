@@ -14,6 +14,7 @@ Zipyard is a lightweight, browser-based tool that packs files and folders into a
 - **Preserves folder structure** inside the generated archive
 - Builds the `.zip` **in memory**, on your machine, using [JSZip](https://stuk.github.io/jszip/)
 - Shows a live **packing list** — file names, sizes, and running totals — before you commit
+- Warns you once a batch gets **large (750 MB+)**, and caps a single archive at **2 GB** so the browser tab doesn't run out of memory
 - Lets you **rename the archive** before downloading
 - Tracks simple, on-device **daily counters** (files packed / archives shipped) with no server involved
 - Wrapped in a clean, custom **"shipping yard" visual identity** — no default AI-template styling
@@ -49,6 +50,8 @@ That's it — the browser handles the rest and offers the finished archive as a 
 | **1. Select** | Files are read locally through the browser's native File API — no upload step exists. |
 | **2. Pack** | JSZip assembles the archive in memory, preserving relative folder paths and compressing with DEFLATE. |
 | **3. Download** | The browser triggers a standard file download. Close the tab, and nothing related to the session persists anywhere but your device (aside from the local daily counters). |
+
+> **A note on size:** Everything is held in your browser's memory while packing, so very large batches can slow a tab down or crash it on lower-memory devices. Zipyard shows a warning once a batch crosses **750 MB**, and caps a single archive at **2 GB** — anything beyond that is skipped rather than added, so split bigger jobs into more than one archive.
 
 ---
 
